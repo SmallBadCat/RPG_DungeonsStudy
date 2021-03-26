@@ -28,33 +28,41 @@ cc.Class({
         Input[e.keyCode] = 0
     },
     update(dt) {
+        // 如果对话框存在，并且是显示状态
+        if (window.dialog && window.dialog.active) return;
+
         if (Input[cc.macro.KEY.a] || Input[cc.macro.KEY.left]) {
             // 向左
             this.sp.x = -1
-            this.node.x -= this.hero_speed * dt
+
         } else if (Input[cc.macro.KEY.d] || Input[cc.macro.KEY.right]) {
             // 向右
-            this.node.x += this.hero_speed * dt
             this.sp.x = 1
         } else {
             this.sp.x = 0
         }
+
         if (Input[cc.macro.KEY.w] || Input[cc.macro.KEY.up]) {
-            // this.node.y += this.hero_speed * dt
+            // 向上
             this.sp.y = 1
+
         } else if (Input[cc.macro.KEY.s] || Input[cc.macro.KEY.down]) {
-            // this.node.y -= this.hero_speed * dt
+            // 向下
             this.sp.y = -1
         } else {
             this.sp.y = 0
         }
+        this.lv = this.node.getComponent(cc.RigidBody).linearVelocity;
         if (this.sp.x) {
-            this.node.x += this.sp.x * this.hero_speed * dt
+            this.lv.y = 0;
+            this.lv.x = this.sp.x * this.hero_speed
         } else if (this.sp.y) {
-            this.node.y += this.sp.y * this.hero_speed * dt
+            this.lv.x = 0;
+            this.lv.y = this.sp.y * this.hero_speed
         } else {
-
+            this.lv.y = this.lv.x = 0
         }
+        this.node.getComponent(cc.RigidBody).linearVelocity = this.lv
         let state = '';
         if (this.sp.x == 1) {
             state = 'right'
@@ -69,4 +77,11 @@ cc.Class({
             this.setState(state)
         }
     },
+    // 碰撞回调
+    onCollisionEnter(other, self) {
+        if (other.node.group == 'smog') {
+            other.node.active = false
+            other.node.getComponent(cc.TiledTile).gid = 0;
+        }
+    }
 });
