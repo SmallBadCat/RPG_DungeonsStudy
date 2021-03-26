@@ -1,9 +1,11 @@
+const mapTool = require('mapTool')
 cc.Class({
     extends: cc.Component,
 
     properties: {
         MapNode: cc.Node,
-        dialogNode: cc.Node
+        dialogNode: cc.Node,
+        loadNode: cc.Node,
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -16,16 +18,20 @@ cc.Class({
         p.gravity = cc.v2(0, 0);
         cc.director.getCollisionManager().enabled = true
             // cc.director.getCollisionManager().enabledDebugDraw = true
-        let mapNameArr = [
-            ['00000', '00000', '00000'],
-            ['00010', '11110', '00100'],
-            ['00000', '10000', '00000'],
-        ]
-        this.initMap(mapNameArr)
+        this.loadNode.active = true
+            // let mapNameArr = [
+            //     ['00000', '00000', '00000'],
+            //     ['00010', '11110', '00100'],
+            //     ['00000', '10000', '00000'],
+            // ]
+        let mapNameArr = mapTool.getRandNameArr();
+        console.log(mapNameArr);
+        this.initMap(mapNameArr);
     },
     // 根据地图名字数组生成地图
     initMap(mapNameArr) {
         let mapSt = null;
+        let loadCnt = 0;
         for (let i = 0; i < mapNameArr.length; i++) {
             for (let j = 0; j < mapNameArr[i].length; j++) {
                 let mapName = mapNameArr[i][j];
@@ -33,7 +39,9 @@ cc.Class({
                 if (!mapSt) {
                     mapSt = { i, j };
                 }
+                loadCnt++
                 cc.loader.loadRes(`map/${mapName}`, cc.TiledMapAsset, (err, assets) => {
+
                     let node = new cc.Node()
                     let map = node.addComponent(cc.TiledMap);
                     node.anchorX = node.anchorY = 0
@@ -42,8 +50,11 @@ cc.Class({
                     // 地图高度对应X轴
                     node.y = -(i - mapSt.i) * 384;
                     map.tmxAsset = assets;
-                    node.parent = this.mapNode;
+                    node.parent = this.MapNode;
                     this.initMapNode(node)
+                    if (--loadCnt == 0) {
+                        this.loadNode.active = false
+                    }
                 })
             }
         }
